@@ -1,6 +1,7 @@
 package com.example_jelle.backenddico.model;
 
 import jakarta.persistence.*;
+import com.example_jelle.backenddico.model.User;
 
 @Entity
 public class DeviceUsage {
@@ -11,5 +12,9 @@ public class DeviceUsage {
     private Boolean usesCGM;
     private Boolean usesInsulinPump;
 
-    // Getters and setters
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    // Getters and setters ...
 }

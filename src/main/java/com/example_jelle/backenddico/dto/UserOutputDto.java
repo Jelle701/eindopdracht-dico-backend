@@ -1,71 +1,35 @@
-// src/main/java/com/example_jelle/backenddico/dto/UserOutputDto.java
 package com.example_jelle.backenddico.dto;
 
-/**
- * DTO voor gebruikersgegevens die teruggestuurd worden naar de client.
- */
+import com.example_jelle.backenddico.model.User;
+
 public class UserOutputDto {
     private Long id;
     private String email;
-    private String firstName;
-    private String lastName;
-    private String dob;
-    private String role;
 
-    /**
-     * Lege constructor voor JSON-mapping.
-     */
+    // No-arg constructor required by Jackson/JPA
     public UserOutputDto() {}
 
-    /**
-     * All-args constructor.
-     */
-    public UserOutputDto(Long id, String email, String firstName, String lastName, String dob, String role) {
+    // <-- This constructor fixes the "no suitable constructor" error
+    public UserOutputDto(Long id, String email) {
         this.id = id;
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.dob = dob;
-        this.role = role;
     }
 
-    // Getters
+    public static UserOutputDto from(User user) {
+        return new UserOutputDto(user.getId(), user.getEmail());
+    }
+
     public Long getId() {
         return id;
     }
-    public String getEmail() {
-        return email;
-    }
-    public String getFirstName() {
-        return firstName;
-    }
-    public String getLastName() {
-        return lastName;
-    }
-    public String getDob() {
-        return dob;
-    }
-    public String getRole() {
-        return role;
-    }
-
-    // Setters
     public void setId(Long id) {
         this.id = id;
     }
+
+    public String getEmail() {
+        return email;
+    }
     public void setEmail(String email) {
         this.email = email;
-    }
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-    public void setDob(String dob) {
-        this.dob = dob;
-    }
-    public void setRole(String role) {
-        this.role = role;
     }
 }
