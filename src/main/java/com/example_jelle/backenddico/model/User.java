@@ -1,33 +1,39 @@
-// src/main/java/com/example_jelle/backenddico/dto/UserOutputDto.java
-package com.example_jelle.backenddico.dto;
+// src/main/java/com/example_jelle/backenddico/model/User.java
+package com.example_jelle.backenddico.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
 
 /**
- * DTO voor gebruikersgegevens die teruggestuurd worden naar de client.
+ * Entiteit die een gebruiker voorstelt in de database.
  */
-public class UserOutputDto {
+@Entity
+@Table(name = "users") // voorkom reserved keyword conflicten
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     private String firstName;
+
+    @Column(nullable = false)
     private String lastName;
-    private String dob;
+
+    @Column(nullable = false)
+    private LocalDate dob;
+
+    @Column(nullable = false)
     private String role;
 
-    /**
-     * Lege constructor voor JSON-mapping.
-     */
-    public UserOutputDto() {}
-
-    /**
-     * All-args constructor.
-     */
-    public UserOutputDto(Long id, String email, String firstName, String lastName, String dob, String role) {
-        this.id = id;
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.dob = dob;
-        this.role = role;
-    }
+    // Lege constructor voor JPA
+    public User() {}
 
     // Getters
     public Long getId() {
@@ -36,13 +42,16 @@ public class UserOutputDto {
     public String getEmail() {
         return email;
     }
+    public String getPassword() {
+        return password;
+    }
     public String getFirstName() {
         return firstName;
     }
     public String getLastName() {
         return lastName;
     }
-    public String getDob() {
+    public LocalDate getDob() {
         return dob;
     }
     public String getRole() {
@@ -56,13 +65,16 @@ public class UserOutputDto {
     public void setEmail(String email) {
         this.email = email;
     }
+    public void setPassword(String password) {
+        this.password = password;
+    }
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-    public void setDob(String dob) {
+    public void setDob(LocalDate dob) {
         this.dob = dob;
     }
     public void setRole(String role) {
