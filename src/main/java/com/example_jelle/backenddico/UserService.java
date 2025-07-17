@@ -2,27 +2,31 @@ package com.example_jelle.backenddico.service;
 
 import com.example_jelle.backenddico.dto.UserInputDto;
 import com.example_jelle.backenddico.dto.UserOutputDto;
+import com.example_jelle.backenddico.exceptions.EmailAlreadyExists;
 import com.example_jelle.backenddico.model.User;
 import com.example_jelle.backenddico.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder; // Importeren van de interface is een best practice
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Gebruik de interface voor flexibiliteit
+    private final PasswordEncoder passwordEncoder;
 
-    // Injecteer zowel de repository als de encoder via de constructor
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public UserOutputDto registerUser(UserInputDto inputDto) {
+        // Controleer of de email al bestaat
+        if (userRepository.findByEmail(inputDto.getEmail()).isPresent()) {
+            throw new EmailAlreadyExists("E-mailadres is al in gebruik.");
+        }
+
         User user = new User();
         user.setEmail(inputDto.getEmail());
-        // Hash het wachtwoord voordat je het opslaat
         user.setPassword(passwordEncoder.encode(inputDto.getPassword()));
         user.setRole("USER");
 
