@@ -1,3 +1,4 @@
+#DIT IS VOOR RENDER.COM
 # Stap 1: De Build-omgeving
 # Gebruik een officiële Maven-image met Java 17 om de applicatie te bouwen
 FROM maven:3.9-eclipse-temurin-17-focal AS build
