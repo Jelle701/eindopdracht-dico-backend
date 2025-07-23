@@ -1,6 +1,7 @@
-package com.jelle.dico.payload.request;
+package com.example_jelle.backenddico.dto; // Aangepast naar de juiste package
 
-import javax.validation.constraints.NotBlank;
+// V V V GEWIJZIGD NAAR JAKARTA V V V
+import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
     @NotBlank

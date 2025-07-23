@@ -1,44 +1,35 @@
-// src/main/java/com/example_jelle/backenddico/dto/RegisterRequest.java
 package com.example_jelle.backenddico.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
-import java.time.LocalDate;
+// V V V GEWIJZIGD NAAR JAVAX V V V
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class RegisterRequest {
-    @NotBlank(message = "Voornaam is verplicht")
-    private String firstName;
 
-    @NotBlank(message = "Achternaam is verplicht")
-    private String lastName;
-
-    @NotNull(message = "Geboortedatum is verplicht")
-    private LocalDate dob;
-
-    @NotBlank(message = "E-mail is verplicht")
-    @Email(message = "Ongeldig e-mailadres")
-    private String email;
-
-    @NotBlank(message = "Wachtwoord is verplicht")
-    @Size(min = 6, message = "Wachtwoord moet minimaal 6 karakters lang zijn")
+    @NotBlank
+    private String username;
+    @NotBlank
     private String password;
+    @NotNull
+    private Boolean onboardingCompleted;
+    @NotBlank
+    @Email
+    private String email;
+    @NotBlank
+    @Size(min = 2)
+    private String role;
 
-    // Getters en Setters
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
-
-    public LocalDate getDob() { return dob; }
-    public void setDob(LocalDate dob) { this.dob = dob; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
+    // Getters en setters...
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+    public Boolean getOnboardingCompleted() { return onboardingCompleted; }
+    public void setOnboardingCompleted(Boolean onboardingCompleted) { this.onboardingCompleted = onboardingCompleted; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

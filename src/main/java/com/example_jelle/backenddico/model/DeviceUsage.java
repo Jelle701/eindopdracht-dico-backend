@@ -3,6 +3,8 @@ package com.example_jelle.backenddico.model;
 import jakarta.persistence.*;
 import com.example_jelle.backenddico.model.User;
 
+import javax.persistence.*;
+
 @Entity
 public class DeviceUsage {
     @Id

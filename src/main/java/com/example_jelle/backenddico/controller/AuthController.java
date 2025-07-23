@@ -1,39 +1,86 @@
 package com.example_jelle.backenddico.controller;
 
-import com.example_jelle.backenddico.dto.LoginRequest;
-import com.example_jelle.backenddico.dto.JwtResponse;
-import com.example_jelle.backenddico.security.JwtUtil;
-import org.springframework.http.HttpStatus;
+import com.example_jelle.backenddico.model.User;
+import com.example_jelle.backenddico.payload.request.LoginRequest;
+import com.example_jelle.backenddico.payload.request.SignupRequest;
+import com.example_jelle.backenddico.payload.response.JwtResponse;
+import com.example_jelle.backenddico.payload.response.MessageResponse;
+import com.example_jelle.backenddico.repository.UserRepository;
+import com.example_jelle.backenddico.security.jwt.JwtUtils;
+import com.example_jelle.backenddico.security.services.UserDetailsImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.HashSet;
+import java.util.Set;
+
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authManager;
-    private final JwtUtil jwtUtil;
+    @Autowired
+    AuthenticationManager authenticationManager;
 
-    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil) {
-        this.authManager = authManager;
-        this.jwtUtil = jwtUtil;
-    }
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder encoder;
+
+    @Autowired
+    JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest request) {
-        try {
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-            String username = authentication.getName();
-            String token = jwtUtil.generateToken(username);
-            return ResponseEntity.ok(new JwtResponse(token));
-        } catch (AuthenticationException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Set<String> flags = userDetails.getFlags();
+
+        return ResponseEntity.ok(new JwtResponse(
+                jwt,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                userDetails.getEmail(),
+                flags
+        ));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: Username is already taken!"));
         }
+
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: Email is already in use!"));
+        }
+
+        User user = new User(
+                signUpRequest.getUsername(),
+                signUpRequest.getEmail(),
+                encoder.encode(signUpRequest.getPassword())
+        );
+
+        user.setFlags(new HashSet<>());
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }
