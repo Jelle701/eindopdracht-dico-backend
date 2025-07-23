@@ -1,17 +1,19 @@
-// src/main/java/com/example_jelle/backenddico/model/User.java
 package com.example_jelle.backenddico.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
-@Table(name = "users") // Zorgt ervoor dat de tabel 'users' heet
+@Table(name = "users") // Standaard tabelnaam voor gebruikers
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Deze velden zijn verplicht bij de registratie
+    @Column(nullable = false, unique = true)
+    private String username;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -19,38 +21,68 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
-
-    @Column(nullable = false)
-    private LocalDate dob;
-
-    // --- DE OPLOSSING ---
-    // De 'role' wordt door de backend ingesteld, maar we maken hem voor de zekerheid nullable.
-    // Dit voorkomt crashes als de logica ergens faalt.
-    @Column(nullable = true)
     private String role;
 
-    // Lege constructor voor JPA
-    public User() {}
+    @Column(name = "onboarding_completed", nullable = false)
+    private Boolean onboardingCompleted = false;
 
-    // Getters
-    public Long getId() { return id; }
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public String getFirstName() { return firstName; }
-    public String getLastName() { return lastName; }
-    public LocalDate getDob() { return dob; }
-    public String getRole() { return role; }
+    // Constructors, Getters, and Setters
+    public User() {
+    }
 
-    // Setters
-    public void setId(Long id) { this.id = id; }
-    public void setEmail(String email) { this.email = email; }
-    public void setPassword(String password) { this.password = password; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
-    public void setDob(LocalDate dob) { this.dob = dob; }
-    public void setRole(String role) { this.role = role; }
+    public User(String username, String email, String password, String role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.onboardingCompleted = false;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public Boolean getOnboardingCompleted() {
+        return onboardingCompleted;
+    }
+
+    public void setOnboardingCompleted(Boolean onboardingCompleted) {
+        this.onboardingCompleted = onboardingCompleted;
+    }
 }
