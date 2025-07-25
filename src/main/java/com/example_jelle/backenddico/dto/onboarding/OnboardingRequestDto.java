@@ -18,6 +18,9 @@ public class OnboardingRequestDto {
     @Valid // Zorgt ervoor dat elk object in de lijst wordt gevalideerd.
     private List<DeviceDto> diabeticDevices;
 
+    @Valid // Valideer het medicineInfo object als het aanwezig is.
+    private MedicineInfoDto medicineInfo;
+
     // Getters en Setters
     public PreferencesDto getPreferences() {
         return preferences;
@@ -33,5 +36,13 @@ public class OnboardingRequestDto {
 
     public void setDiabeticDevices(List<DeviceDto> diabeticDevices) {
         this.diabeticDevices = diabeticDevices;
+    }
+
+    public MedicineInfoDto getMedicineInfo() {
+        return medicineInfo;
+    }
+
+    public void setMedicineInfo(MedicineInfoDto medicineInfo) {
+        this.medicineInfo = medicineInfo;
     }
 }

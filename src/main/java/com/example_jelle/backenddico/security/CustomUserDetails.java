@@ -8,6 +8,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A custom UserDetails implementation that wraps the application's User entity.
+ * This allows storing the full User object in the security principal.
+ */
 public class CustomUserDetails implements UserDetails {
 
     private final User user;
@@ -16,14 +20,18 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-    // Methode om onze volledige User entiteit terug te krijgen.
+    /**
+     * Provides access to the full User entity.
+     * @return The wrapped User object.
+     */
     public User getUser() {
         return user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.getRole()));
+        // Important: The role must be prefixed with "ROLE_" for hasRole() checks to work.
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
     }
 
     @Override
@@ -33,7 +41,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getEmail(); // We gebruiken e-mail als username
+        // Spring Security's "username" is our application's email.
+        return user.getEmail();
     }
 
     @Override

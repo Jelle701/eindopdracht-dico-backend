@@ -3,6 +3,8 @@ package com.example_jelle.backenddico.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList; // TOEGEVOEGD
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -21,33 +23,28 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String role;
-
     private String firstName;
     private String lastName;
     private LocalDate dob;
-
-    // Dit veld wordt gebruikt door Spring Security's UserDetails contract.
-    @Column(nullable = false)
-    private boolean enabled = false;
-
-    // --- NIEUWE VELDEN VOLGENS SPECIFICATIES ---
-
-    @Embedded
-    private UserFlags flags;
+    private String role;
+    private boolean enabled;
 
     private String verificationCode;
     private LocalDateTime verificationCodeExpires;
 
-    // --- CONSTRUCTOR ---
-    public User() {
-        // Initialiseer het flags object om NullPointerExceptions te voorkomen
-        this.flags = new UserFlags();
-    }
+    @Embedded
+    private UserFlags flags = new UserFlags();
 
-    // --- GETTERS EN SETTERS ---
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private UserProfile userProfile;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<UserDevice> devices = new ArrayList<>(); // FIX: Initialiseer de lijst
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<GlucoseMeasurement> glucoseMeasurements = new ArrayList<>(); // FIX: Initialiseer de lijst
+
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -60,9 +57,6 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 
@@ -72,15 +66,38 @@ public class User {
     public LocalDate getDob() { return dob; }
     public void setDob(LocalDate dob) { this.dob = dob; }
 
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-    public UserFlags getFlags() { return flags; }
-    public void setFlags(UserFlags flags) { this.flags = flags; }
 
     public String getVerificationCode() { return verificationCode; }
     public void setVerificationCode(String verificationCode) { this.verificationCode = verificationCode; }
 
     public LocalDateTime getVerificationCodeExpires() { return verificationCodeExpires; }
     public void setVerificationCodeExpires(LocalDateTime verificationCodeExpires) { this.verificationCodeExpires = verificationCodeExpires; }
+
+    public UserFlags getFlags() { return flags; }
+    public void setFlags(UserFlags flags) { this.flags = flags; }
+
+    public UserProfile getUserProfile() { return userProfile; }
+    public void setUserProfile(UserProfile userProfile) { this.userProfile = userProfile; }
+
+    public List<UserDevice> getDevices() { return devices; }
+    public void setDevices(List<UserDevice> devices) { this.devices = devices; }
+
+    public List<GlucoseMeasurement> getGlucoseMeasurements() {
+        return glucoseMeasurements;
+    }
+
+    public void setGlucoseMeasurements(List<GlucoseMeasurement> glucoseMeasurements) {
+        this.glucoseMeasurements = glucoseMeasurements;
+    }
+
+    // TOEGEVOEGD: Helper-methode voor een robuuste, bidirectionele relatie
+    public void addGlucoseMeasurement(GlucoseMeasurement measurement) {
+        this.glucoseMeasurements.add(measurement);
+        measurement.setUser(this);
+    }
 }

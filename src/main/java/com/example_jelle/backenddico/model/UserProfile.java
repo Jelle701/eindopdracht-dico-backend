@@ -1,4 +1,3 @@
-// src/main/java/com/example_jelle/backenddico/model/UserProfile.java
 package com.example_jelle.backenddico.model;
 
 import jakarta.persistence.*;
@@ -19,6 +18,14 @@ public class UserProfile {
     private Double weight;
     private Double height;
     private Double bmi;
+
+    // Velden voor medicatiegegevens
+    private String diabetesType;
+    private String longActingInsulin;
+    private String shortActingInsulin;
+
+    @Column(unique = true) // Elk secret moet uniek zijn
+    private String apiSecretHash;
 
     // Getters en Setters
     public Long getId() { return id; }
@@ -41,4 +48,16 @@ public class UserProfile {
 
     public Double getBmi() { return bmi; }
     public void setBmi(Double bmi) { this.bmi = bmi; }
+
+    public String getDiabetesType() { return diabetesType; }
+    public void setDiabetesType(String diabetesType) { this.diabetesType = diabetesType; }
+
+    public String getLongActingInsulin() { return longActingInsulin; }
+    public void setLongActingInsulin(String longActingInsulin) { this.longActingInsulin = longActingInsulin; }
+
+    public String getShortActingInsulin() { return shortActingInsulin; }
+    public void setShortActingInsulin(String shortActingInsulin) { this.shortActingInsulin = shortActingInsulin; }
+
+    public String getApiSecretHash() { return apiSecretHash; }
+    public void setApiSecretHash(String apiSecretHash) { this.apiSecretHash = apiSecretHash; }
 }

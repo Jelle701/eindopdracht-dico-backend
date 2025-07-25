@@ -1,8 +1,10 @@
 package com.example_jelle.backenddico.service;
 
+import com.example_jelle.backenddico.dto.FullUserProfileDto;
 import com.example_jelle.backenddico.dto.UserOutputDto;
 import com.example_jelle.backenddico.dto.onboarding.DeviceDto;
 import com.example_jelle.backenddico.dto.onboarding.OnboardingRequestDto;
+import com.example_jelle.backenddico.dto.onboarding.MedicineInfoDto;
 import com.example_jelle.backenddico.dto.onboarding.PreferencesDto;
 import com.example_jelle.backenddico.exceptions.EmailAlreadyExists;
 import com.example_jelle.backenddico.exceptions.InvalidTokenException;
@@ -32,14 +34,12 @@ public class UserServiceImpl implements UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final PasswordEncoder passwordEncoder;
-    // private final EmailService emailService; // Klaar voor toekomstige implementatie
 
-    public UserServiceImpl(UserRepository userRepository, UserProfileRepository userProfileRepository, UserDeviceRepository userDeviceRepository, PasswordEncoder passwordEncoder /*, EmailService emailService */) {
+    public UserServiceImpl(UserRepository userRepository, UserProfileRepository userProfileRepository, UserDeviceRepository userDeviceRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userDeviceRepository = userDeviceRepository;
         this.passwordEncoder = passwordEncoder;
-        // this.emailService = emailService;
     }
 
     @Override
@@ -48,7 +48,6 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new EmailAlreadyExists("E-mailadres '" + req.getEmail() + "' is al in gebruik.");
         }
-
         User user = new User();
         user.setUsername(req.getEmail());
         user.setEmail(req.getEmail());
@@ -57,19 +56,11 @@ public class UserServiceImpl implements UserService {
         user.setLastName(req.getLastName());
         user.setDob(req.getDob());
         user.setRole("USER");
-        user.setEnabled(false); // Account is pas actief na verificatie
-
-        // De User constructor initialiseert de flags al correct (alles op false).
-
-        // Genereer een 6-cijferige code
+        user.setEnabled(false);
         String code = String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
         user.setVerificationCode(code);
-        user.setVerificationCodeExpires(LocalDateTime.now().plusHours(1)); // Code is 1 uur geldig
-
+        user.setVerificationCodeExpires(LocalDateTime.now().plusHours(1));
         logger.info("DEV MODE: Verification code for {} is {}", user.getEmail(), code);
-        // In een productieomgeving zou hier de e-mail verstuurd worden.
-        // emailService.sendVerificationEmail(user.getEmail(), code);
-
         userRepository.save(user);
     }
 
@@ -77,19 +68,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User verifyUser(String email, String token) {
         logger.info("Attempting to verify email {} with code: '{}'", email, token);
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidTokenException("Verificatiecode is ongeldig of verlopen."));
-
         if (user.getVerificationCode() == null || !user.getVerificationCode().equals(token) || user.getVerificationCodeExpires().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Verificatiecode is ongeldig of verlopen.");
         }
-
         user.setEnabled(true);
         user.getFlags().setEmailVerified(true);
         user.setVerificationCode(null);
         user.setVerificationCodeExpires(null);
-
         return userRepository.save(user);
     }
 
@@ -102,57 +89,66 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FullUserProfileDto getFullUserProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Gebruiker met e-mail '" + email + "' niet gevonden."));
+        // De .from() methode in de DTO handelt de volledige mapping af.
+        return FullUserProfileDto.from(user);
+    }
+
+    @Override
     @Transactional
-    public UserOutputDto saveProfileDetails(String userEmail, OnboardingRequestDto onboardingData) {
+    public FullUserProfileDto saveProfileDetails(String userEmail, OnboardingRequestDto onboardingData) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("Gebruiker niet gevonden voor onboarding."));
 
-        // --- Verwerk gebruikersvoorkeuren ---
+        // Haal het profiel eenmalig op of maak een nieuw profiel aan.
+        // Dit voorkomt onnodige database-queries.
+        UserProfile profile = user.getUserProfile();
+        if (profile == null) {
+            profile = new UserProfile();
+            profile.setUser(user);
+        }
+
         if (onboardingData.getPreferences() != null) {
             PreferencesDto preferences = onboardingData.getPreferences();
-
-            UserProfile profile = userProfileRepository.findById(user.getId()).orElse(new UserProfile());
-            if (profile.getUser() == null) {
-                profile.setUser(user);
-            }
-
             profile.setMeasurementSystem(preferences.getSystem());
-            // FIX: Converteer de Gender Enum naar een String voor de database.
             profile.setGender(preferences.getGender().name());
-
-            // FIX: De DTO bevat nu Doubles. De validatie is al gebeurd, dus we kunnen direct toewijzen.
-            // De oude try-catch en StringUtils.hasText() zijn niet meer nodig.
             profile.setWeight(preferences.getWeight());
             profile.setHeight(preferences.getHeight());
             profile.setBmi(preferences.getBmi());
-
             userProfileRepository.save(profile);
-            user.getFlags().setHasPreferences(true); // Zet de flag
+            user.getFlags().setHasPreferences(true);
         }
 
-        // --- Verwerk diabetische apparaten ---
-        if (onboardingData.getDiabeticDevices() != null && !onboardingData.getDiabeticDevices().isEmpty()) {
-            // Optioneel: verwijder oude apparaten voordat je nieuwe toevoegt
-            // userDeviceRepository.deleteAllByUser(user);
+        // Verwerk de nieuwe medicatiegegevens
+        if (onboardingData.getMedicineInfo() != null) {
+            MedicineInfoDto medicineInfo = onboardingData.getMedicineInfo();
+            profile.setDiabetesType(medicineInfo.getDiabetesType());
+            profile.setLongActingInsulin(medicineInfo.getLongActingInsulin());
+            profile.setShortActingInsulin(medicineInfo.getShortActingInsulin());
+        }
 
+        userProfileRepository.save(profile); // Sla alle profielwijzigingen in één keer op
+
+        if (onboardingData.getDiabeticDevices() != null && !onboardingData.getDiabeticDevices().isEmpty()) {
+            userDeviceRepository.deleteAllByUser(user); // Verwijder oude apparaten voor een schone lei
             for (DeviceDto deviceDto : onboardingData.getDiabeticDevices()) {
                 UserDevice userDevice = new UserDevice();
                 userDevice.setUser(user);
-                // FIX: Converteer de DeviceCategory Enum naar een String.
                 userDevice.setCategory(deviceDto.getCategorie().name());
                 userDevice.setManufacturer(deviceDto.getFabrikant());
                 userDevice.setModel(deviceDto.getModel());
                 userDeviceRepository.save(userDevice);
             }
-            // In de specificaties is er een aparte flag voor devices, die kan hier worden gezet.
-            // user.getFlags().setHasDevices(true);
         }
 
-        // Volgens de specificaties wordt deze methode aangeroepen na de /register-details pagina.
         user.getFlags().setHasDetails(true);
-
-        User savedUser = userRepository.save(user);
+        User savedUser = userRepository.save(user); // Sla de gebruiker op om de vlaggen te persisteren
         logger.info("Profile details saved and flags updated for user: {}", userEmail);
-        return UserOutputDto.from(savedUser);
+
+        // Retourneer de volledige, bijgewerkte DTO voor een consistente response.
+        return FullUserProfileDto.from(savedUser);
     }
 }

@@ -5,9 +5,9 @@ import com.example_jelle.backenddico.model.User;
 import com.example_jelle.backenddico.payload.request.LoginRequest;
 import com.example_jelle.backenddico.payload.request.RegisterRequest;
 import com.example_jelle.backenddico.payload.request.VerifyEmailRequest;
-import com.example_jelle.backenddico.payload.response.JwtResponse;
+import com.example_jelle.backenddico.payload.response.JwtResponse; // TOEGEVOEGD: De ontbrekende import
 import com.example_jelle.backenddico.payload.response.MessageResponse;
-import com.example_jelle.backenddico.security.CustomUserDetails; // Importeer CustomUserDetails
+import com.example_jelle.backenddico.security.CustomUserDetails;
 import com.example_jelle.backenddico.security.JwtUtil;
 import com.example_jelle.backenddico.service.UserService;
 import jakarta.validation.Valid;
@@ -27,7 +27,6 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    // We hebben de UserDetailsService en UserRepository hier niet meer nodig!
     public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
@@ -41,7 +40,6 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
 
-            // OPTIMALISATIE: Haal de volledige user direct uit de principal
             CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
             User user = userDetails.getUser();
 
@@ -51,7 +49,6 @@ public class AuthController {
 
             final String token = jwtUtil.generateToken(userDetails);
 
-            // We hebben de 'user' al, dus geen extra database query nodig!
             return ResponseEntity.ok(new JwtResponse(
                     token,
                     user.getId(),
@@ -73,10 +70,8 @@ public class AuthController {
     @PostMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@Valid @RequestBody VerifyEmailRequest verifyRequest) {
         try {
-            // Deze methode geeft de volledige, bijgewerkte User terug
             User user = userService.verifyUser(verifyRequest.getEmail(), verifyRequest.getToken());
 
-            // OPTIMALISATIE: Maak de UserDetails direct van de 'user' die we al hebben
             UserDetails userDetails = new CustomUserDetails(user);
             final String jwt = jwtUtil.generateToken(userDetails);
 

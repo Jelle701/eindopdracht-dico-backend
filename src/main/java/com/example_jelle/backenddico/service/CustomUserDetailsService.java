@@ -2,8 +2,7 @@ package com.example_jelle.backenddico.service;
 
 import com.example_jelle.backenddico.model.User;
 import com.example_jelle.backenddico.repository.UserRepository;
-// FIX: Importeer onze nieuwe CustomUserDetails
-import com.example_jelle.backenddico.security.CustomUserDetails;
+import com.example_jelle.backenddico.security.CustomUserDetails; // TOEGEVOEGD
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,11 +18,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // FIX: Geef onze custom UserDetails implementatie terug
+        // FIX: Return our custom UserDetails implementation, not the standard one.
+        // This makes the full User object available in the security context.
         return new CustomUserDetails(user);
     }
 }
