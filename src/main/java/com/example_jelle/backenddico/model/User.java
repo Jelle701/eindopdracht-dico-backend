@@ -1,10 +1,11 @@
 package com.example_jelle.backenddico.model;
 
 import jakarta.persistence.*;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users") // Standaard tabelnaam voor gebruikers
+@Table(name = "users")
 public class User {
 
     @Id
@@ -23,66 +24,63 @@ public class User {
     @Column(nullable = false)
     private String role;
 
-    @Column(name = "onboarding_completed", nullable = false)
-    private Boolean onboardingCompleted = false;
+    private String firstName;
+    private String lastName;
+    private LocalDate dob;
 
-    // Constructors, Getters, and Setters
+    // Dit veld wordt gebruikt door Spring Security's UserDetails contract.
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+    // --- NIEUWE VELDEN VOLGENS SPECIFICATIES ---
+
+    @Embedded
+    private UserFlags flags;
+
+    private String verificationCode;
+    private LocalDateTime verificationCodeExpires;
+
+    // --- CONSTRUCTOR ---
     public User() {
+        // Initialiseer het flags object om NullPointerExceptions te voorkomen
+        this.flags = new UserFlags();
     }
 
-    public User(String username, String email, String password, String role) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.onboardingCompleted = false;
-    }
+    // --- GETTERS EN SETTERS ---
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public LocalDate getDob() { return dob; }
+    public void setDob(LocalDate dob) { this.dob = dob; }
 
-    public String getRole() {
-        return role;
-    }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public UserFlags getFlags() { return flags; }
+    public void setFlags(UserFlags flags) { this.flags = flags; }
 
-    public Boolean getOnboardingCompleted() {
-        return onboardingCompleted;
-    }
+    public String getVerificationCode() { return verificationCode; }
+    public void setVerificationCode(String verificationCode) { this.verificationCode = verificationCode; }
 
-    public void setOnboardingCompleted(Boolean onboardingCompleted) {
-        this.onboardingCompleted = onboardingCompleted;
-    }
+    public LocalDateTime getVerificationCodeExpires() { return verificationCodeExpires; }
+    public void setVerificationCodeExpires(LocalDateTime verificationCodeExpires) { this.verificationCodeExpires = verificationCodeExpires; }
 }

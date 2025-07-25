@@ -1,66 +1,70 @@
-// src/main/java/com/example_jelle/backenddico/security/JwtRequestFilter.java
 package com.example_jelle.backenddico.security;
 
 import com.example_jelle.backenddico.service.CustomUserDetailsService;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import io.jsonwebtoken.JwtException; // <-- Import JwtException
+import org.slf4j.Logger; // <-- Import Logger
+import org.slf4j.LoggerFactory; // <-- Import LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException; // Belangrijke import
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
+    // Best practice: Add a logger for better debugging.
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
 
-    public JwtRequestFilter(CustomUserDetailsService userDetailsService, JwtUtil jwtUtil) {
-        this.userDetailsService = userDetailsService;
-        this.jwtUtil = jwtUtil;
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain
+    ) throws java.io.IOException, jakarta.servlet.ServletException {
 
-        final String authorizationHeader = request.getHeader("Authorization");
-
+        final String authHeader = request.getHeader("Authorization");
         String username = null;
         String jwt = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            username = jwtUtil.validateAndExtractUsername(jwt);
-        }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
             try {
-                // --- DE OPLOSSING ---
-                // We proberen de gebruiker te laden.
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-                // Als de gebruiker gevonden wordt, stellen we de authenticatie in.
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-            } catch (UsernameNotFoundException e) {
-                // Als de gebruiker niet gevonden wordt (omdat de DB is gewist),
-                // doen we niets. De request gaat door als anoniem, wat correct is
-                // voor publieke endpoints zoals /register.
+                // FIX: Extract the username only if the token is valid.
+                // This prevents malformed tokens from causing an exception.
+                username = jwtUtil.extractUsername(jwt);
+            } catch (JwtException e) {
+                // Log the error for debugging but allow the request to continue.
+                // The user will remain unauthenticated.
+                logger.warn("Invalid JWT token received: {}. Token: {}", e.getMessage(), jwt);
             }
         }
 
-        filterChain.doFilter(request, response);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            var userDetails = userDetailsService.loadUserByUsername(username);
+
+            // The validateToken method is still important as it checks expiration.
+            if (jwtUtil.validateToken(jwt, userDetails)) {
+                var authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+
+        chain.doFilter(request, response);
     }
 }

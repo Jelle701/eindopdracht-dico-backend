@@ -1,12 +1,14 @@
-package com.jelle.dico.payload.request;
+package com.example_jelle.backenddico.payload.request;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
-    @NotBlank
-    private String email;
+    @NotBlank(message = "Email is required.")
+    @Email(message = "Please provide a valid email address.")
+    private String email; // AANGEPAST: van username naar email
 
-    @NotBlank
+    @NotBlank(message = "Password is required.")
     private String password;
 
     // Getters en Setters

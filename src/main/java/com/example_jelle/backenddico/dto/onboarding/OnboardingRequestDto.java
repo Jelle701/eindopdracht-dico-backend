@@ -1,37 +1,37 @@
-// src/main/java/com/example_jelle/backenddico/dto/onboarding/OnboardingRequestDto.java
 package com.example_jelle.backenddico.dto.onboarding;
 
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Email;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-// Dit is de hoofd-DTO die alle data van het onboardingproces bevat
+/**
+ * De hoofd-DTO die alle data van de PUT /api/profile/details request bevat.
+ * De @Valid annotaties zorgen ervoor dat de validatieregels in de geneste
+ * DTO's (PreferencesDto en DeviceDto) ook worden gecontroleerd.
+ */
 public class OnboardingRequestDto {
-    private String role;
+
+    @NotNull(message = "Het 'preferences' object mag niet ontbreken.")
+    @Valid // Zorgt ervoor dat de velden BINNEN PreferencesDto worden gevalideerd.
     private PreferencesDto preferences;
-    private MedicineInfoDto medicineInfo;
+
+    @Valid // Zorgt ervoor dat elk object in de lijst wordt gevalideerd.
     private List<DeviceDto> diabeticDevices;
 
-
-    @NotNull(message = "Email is verplicht")
-    @Email(message = "Ongeldig e-mailadres")
-    private String email;
-
-    @NotNull(message = "Wachtwoord is verplicht")
-    @Size(min = 6, message = "Wachtwoord moet minimaal 6 tekens zijn")
-    private String password;
-
     // Getters en Setters
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public PreferencesDto getPreferences() {
+        return preferences;
+    }
 
-    public PreferencesDto getPreferences() { return preferences; }
-    public void setPreferences(PreferencesDto preferences) { this.preferences = preferences; }
+    public void setPreferences(PreferencesDto preferences) {
+        this.preferences = preferences;
+    }
 
-    public MedicineInfoDto getMedicineInfo() { return medicineInfo; }
-    public void setMedicineInfo(MedicineInfoDto medicineInfo) { this.medicineInfo = medicineInfo; }
+    public List<DeviceDto> getDiabeticDevices() {
+        return diabeticDevices;
+    }
 
-    public List<DeviceDto> getDiabeticDevices() { return diabeticDevices; }
-    public void setDiabeticDevices(List<DeviceDto> diabeticDevices) { this.diabeticDevices = diabeticDevices; }
+    public void setDiabeticDevices(List<DeviceDto> diabeticDevices) {
+        this.diabeticDevices = diabeticDevices;
+    }
 }

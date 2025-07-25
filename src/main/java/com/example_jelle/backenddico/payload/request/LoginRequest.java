@@ -1,11 +1,10 @@
-package com.example_jelle.backenddico.dto; // Aangepast naar de juiste package
+package com.jelle.dico.payload.request;
 
-// V V V GEWIJZIGD NAAR JAKARTA V V V
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank; // <-- Correcte import
 
 public class LoginRequest {
     @NotBlank
-    private String email;
+    private String email; // Let op: je AuthController verwacht 'username', niet 'email'. Pas dit aan of je login-logica.
 
     @NotBlank
     private String password;
